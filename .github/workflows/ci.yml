@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Test (JVM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Build and test
+        run: mvn -B verify
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: target/surefire-reports/
+
+  native:
+    name: Native Image (${{ matrix.os }})
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GraalVM 21
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: 21
+          distribution: graalvm-community
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: true
+          cache: maven
+
+      - name: Build native image
+        run: mvn -B package -Pnative -DskipTests
+
+      - name: Smoke-test binary
+        run: |
+          ./target/spring-drift --version
+          ./target/spring-drift --help
+          mkdir -p test-resources
+          cat > test-resources/application.yml <<'YAML'
+          server:
+            port: 8080
+          spring:
+            datasource:
+              password: secret
+          debug: false
+          YAML
+          cat > test-resources/application-prod.yml <<'YAML'
+          server:
+            port: 9090
+          spring:
+            datasource:
+              password: password
+          YAML
+          ./target/spring-drift scan test-resources --output /tmp/drift-report.md
+          cat /tmp/drift-report.md
+
+      - name: Upload native binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: spring-drift-${{ matrix.os }}
+          path: target/spring-drift
+          if-no-files-found: error
