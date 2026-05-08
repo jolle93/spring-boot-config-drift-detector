@@ -2,6 +2,8 @@
 
 > CLI that compares `application.yml`, `application-*.yml` and `application.properties` across all stages of a Spring Boot project. Finds drift, missing keys, dangerous defaults and exports a Markdown report.
 
+**[Get spring-drift — $29 Lifetime License](https://jollepaul.gumroad.com/l/spring-drift)**
+
 **Codename:** spring-drift
 
 ---

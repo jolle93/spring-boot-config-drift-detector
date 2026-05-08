@@ -4,6 +4,31 @@
 # Validates commit messages based on project-specific patterns
 #
 
+# Show validation error and examples
+show_examples() {
+    echo ""
+    echo "Expected format: <type>[TICKET-####]: <description> OR <type>: <description>"
+    echo ""
+    echo "Valid types:"
+    echo "  feat     - New feature"
+    echo "  fix      - Bug fix"
+    echo "  docs     - Documentation changes"
+    echo "  style    - Code style changes"
+    echo "  refactor - Code refactoring"
+    echo "  perf     - Performance improvements"
+    echo "  test     - Adding or updating tests"
+    echo "  chore    - Maintenance tasks"
+    echo "  ci       - CI/CD changes"
+    echo "  build    - Build system changes"
+    echo ""
+    echo "Examples:"
+    echo "  feat[PROJ-123]: add user authentication endpoint"
+    echo "  fix: resolve database connection timeout"
+    echo "  docs(#42): update API documentation"
+    echo ""
+    echo "Your message: $commit_message"
+}
+
 # Read the commit message
 commit_message=$(cat "$1")
 
@@ -87,31 +112,6 @@ elif [ $result -eq 2 ]; then
         exit 0
     fi
 fi
-
-# Show validation error and examples
-show_examples() {
-    echo ""
-    echo "Expected format: <type>[TICKET-####]: <description> OR <type>: <description>"
-    echo ""
-    echo "Valid types:"
-    echo "  feat     - New feature"
-    echo "  fix      - Bug fix" 
-    echo "  docs     - Documentation changes"
-    echo "  style    - Code style changes"
-    echo "  refactor - Code refactoring"
-    echo "  perf     - Performance improvements"
-    echo "  test     - Adding or updating tests"
-    echo "  chore    - Maintenance tasks"
-    echo "  ci       - CI/CD changes"
-    echo "  build    - Build system changes"
-    echo ""
-    echo "Examples:"
-    echo "  feat[PROJ-123]: add user authentication endpoint"
-    echo "  fix: resolve database connection timeout"
-    echo "  docs(#42): update API documentation"
-    echo ""
-    echo "Your message: $commit_message"
-}
 
 show_examples
 exit 1
