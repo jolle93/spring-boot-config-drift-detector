@@ -1,0 +1,117 @@
+#!/bin/sh
+#
+# Universal Semantic Commit Message Validation Hook
+# Validates commit messages based on project-specific patterns
+#
+
+# Read the commit message
+commit_message=$(cat "$1")
+
+# Skip validation for merge commits
+if echo "$commit_message" | grep -q "^Merge "; then
+    exit 0
+fi
+
+# Skip validation for revert commits
+if echo "$commit_message" | grep -q "^Revert "; then
+    exit 0
+fi
+
+# Define semantic commit types
+types="feat|fix|docs|style|refactor|perf|test|chore|ci|build"
+
+# Function to validate basic semantic commit format
+validate_basic_semantic() {
+    pattern="^($types): .{1,50}"
+    if echo "$commit_message" | grep -qE "$pattern"; then
+        return 0
+    fi
+    return 1
+}
+
+# Function to detect and validate project-specific patterns
+validate_project_specific() {
+    # Check if we're in an EGBR project (look for WARP.md or specific modules)
+    if [ -f "WARP.md" ] || [ -d "core" ] && [ -d "api" ] && [ -f "pom.xml" ]; then
+        pattern="^\[EGBR-[0-9]+\] .{1,}"
+        if echo "$commit_message" | grep -qE "$pattern"; then
+            return 0
+        fi
+        echo "❌ EGBR project detected - use format: [EGBR-####] <description>"
+        return 1
+    fi
+    
+    # Check for other JIRA-style projects (look for JIRA references in existing commits)
+    if git log --oneline -10 2>/dev/null | grep -qE "\[[A-Z]+-[0-9]+\]"; then
+        # Extract project prefix from recent commits
+        project_prefix=$(git log --oneline -10 2>/dev/null | grep -oE "\[[A-Z]+-[0-9]+\]" | head -1 | sed 's/\[//' | sed 's/-.*$//')
+        if [ -n "$project_prefix" ]; then
+            pattern="^($types)\[$project_prefix-[0-9]+\]: .{1,50}"
+            if echo "$commit_message" | grep -qE "$pattern"; then
+                return 0
+            fi
+            echo "❌ Project uses JIRA tickets - use format: <type>[$project_prefix-####]: <description>"
+            return 1
+        fi
+    fi
+    
+    # Check for GitHub-style issues (#123)
+    if git log --oneline -10 2>/dev/null | grep -qE "#[0-9]+"; then
+        pattern="^($types)(\(#[0-9]+\))?: .{1,50}"
+        if echo "$commit_message" | grep -qE "$pattern"; then
+            return 0
+        fi
+        echo "❌ Project uses GitHub issues - consider format: <type>(#123): <description> or <type>: <description>"
+        return 1
+    fi
+    
+    # Default to basic semantic commit validation
+    return 2  # Indicates fallback to basic validation
+}
+
+# Try project-specific validation first
+validate_project_specific
+result=$?
+
+if [ $result -eq 0 ]; then
+    echo "✅ Commit message format is valid"
+    exit 0
+elif [ $result -eq 1 ]; then
+    # Project-specific validation failed
+    show_examples
+    exit 1
+elif [ $result -eq 2 ]; then
+    # Fallback to basic semantic commit validation
+    if validate_basic_semantic; then
+        echo "✅ Commit message format is valid"
+        exit 0
+    fi
+fi
+
+# Show validation error and examples
+show_examples() {
+    echo ""
+    echo "Expected format: <type>[TICKET-####]: <description> OR <type>: <description>"
+    echo ""
+    echo "Valid types:"
+    echo "  feat     - New feature"
+    echo "  fix      - Bug fix" 
+    echo "  docs     - Documentation changes"
+    echo "  style    - Code style changes"
+    echo "  refactor - Code refactoring"
+    echo "  perf     - Performance improvements"
+    echo "  test     - Adding or updating tests"
+    echo "  chore    - Maintenance tasks"
+    echo "  ci       - CI/CD changes"
+    echo "  build    - Build system changes"
+    echo ""
+    echo "Examples:"
+    echo "  feat[PROJ-123]: add user authentication endpoint"
+    echo "  fix: resolve database connection timeout"
+    echo "  docs(#42): update API documentation"
+    echo ""
+    echo "Your message: $commit_message"
+}
+
+show_examples
+exit 1
