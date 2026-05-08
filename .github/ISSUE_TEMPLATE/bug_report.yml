@@ -1,0 +1,64 @@
+name: Bug Report
+description: Something doesn't work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as possible.
+
+  - type: input
+    id: version
+    attributes:
+      label: spring-drift version
+      description: Which binary did you download? Check the GitHub release tag.
+      placeholder: "v1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux (x64)
+        - macOS (arm64)
+        - macOS (x64)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: command
+    attributes:
+      label: Command you ran
+      placeholder: "spring-drift scan ./src/main/resources"
+    validations:
+      required: true
+
+  - type: textarea
+    id: config-structure
+    attributes:
+      label: Config file structure
+      description: Which files are in the scanned directory? No need to share values, just the filenames.
+      placeholder: |
+        application.yml
+        application-dev.yml
+        application-prod.yml
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened?
+      description: Paste the full output of the command.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true

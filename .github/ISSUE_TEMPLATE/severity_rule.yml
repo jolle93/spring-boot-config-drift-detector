@@ -1,0 +1,55 @@
+name: New Severity Rule
+description: Suggest a Spring Boot property that should be flagged as dangerous.
+labels: ["severity-rule", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Seen a Spring Boot misconfiguration cause real pain in production? Help us catch it for everyone.
+
+  - type: input
+    id: property
+    attributes:
+      label: Property key
+      description: The full Spring Boot property key that should be flagged.
+      placeholder: "spring.security.oauth2.resourceserver.jwt.jwk-set-uri"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: drift-type
+    attributes:
+      label: Type of issue
+      options:
+        - DANGEROUS_DEFAULT — the default value is unsafe in production
+        - MISSING_KEY — this key should be present in all profiles
+        - VALUE_DRIFT — a specific value combination is dangerous
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is this dangerous?
+      description: Describe the failure mode — what goes wrong in production when this drifts?
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source or reference
+      description: Link to Spring docs, CVE, blog post, or your own postmortem.
+      placeholder: "https://docs.spring.io/..."
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example (optional)
+      description: Show what a dangerous vs. safe config looks like.
+      placeholder: |
+        # Dangerous
+        spring.jpa.hibernate.ddl-auto=update
+
+        # Safe
+        spring.jpa.hibernate.ddl-auto=validate
