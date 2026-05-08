@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://staging-db:5432/ecommerce_staging
+    username: staging_user
+    hikari:
+      maximum-pool-size: 8
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  cache:
+    type: redis
+  data:
+    redis:
+      timeout: 1000ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: when-authorized
+
+server:
+  error:
+    include-stacktrace: always
+
+logging:
+  level:
+    root: INFO
+    com.example.ecommerce: DEBUG
+    org.springframework.security: DEBUG
+
+feature:
+  async-order-processing:
+    enabled: true
+  new-checkout-flow:
+    enabled: true

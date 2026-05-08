@@ -1,0 +1,44 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ecommerce_dev
+    username: dev_user
+    password: dev_secret
+    hikari:
+      maximum-pool-size: 5
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  cache:
+    type: simple
+  data:
+    redis:
+      timeout: 500ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+server:
+  error:
+    include-stacktrace: always
+    include-message: always
+
+logging:
+  level:
+    root: DEBUG
+    com.example.ecommerce: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+
+feature:
+  async-order-processing:
+    enabled: false
+  new-checkout-flow:
+    enabled: true
