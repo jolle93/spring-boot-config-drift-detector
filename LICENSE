@@ -1,0 +1,30 @@
+Copyright (c) 2026 Julian Paul (julianpaul.dev)
+
+spring-drift Source Available License v1.0
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated source code ("the Software"), to:
+
+  - view and inspect the source code
+  - use the Software for personal, non-commercial, and educational purposes
+  - submit contributions (bug reports, pull requests) to the official repository
+
+The following are explicitly NOT permitted without a valid commercial license:
+
+  - use of the Software within a company, team, or organization context
+  - redistribution of the Software or its binaries, in whole or in part
+  - sublicensing, selling, or otherwise commercializing the Software
+  - removing or altering this license or any copyright notices
+
+A commercial license is required for any use within a company or team setting.
+Commercial licenses are available at: https://julianpaul.dev/spring-drift
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+For licensing inquiries: drift@julian-paul.de
