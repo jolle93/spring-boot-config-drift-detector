@@ -1,6 +1,8 @@
 package dev.julianpaul.springdrift.config;
 
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,14 +11,16 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * Loads application*.yml and application*.properties from a resources directory.
+ * Loads application*.yml/yaml and application*.properties from a resources directory.
  * Returns a map of stage name → flat key/value config.
  * Stage name "default" = application.yml / application.properties.
  */
 public class ConfigLoader {
 
-    private static final String YAML_GLOB = "application*.yml";
-    private static final String PROPS_GLOB = "application*.properties";
+    private static final PathMatcher YAML_MATCHER =
+            FileSystems.getDefault().getPathMatcher("glob:application*.{yml,yaml}");
+    private static final PathMatcher PROPS_MATCHER =
+            FileSystems.getDefault().getPathMatcher("glob:application*.properties");
 
     public Map<String, StageConfig> load(Path resourcesDir) throws IOException {
         if (!Files.isDirectory(resourcesDir)) {
@@ -30,14 +34,13 @@ public class ConfigLoader {
             String stage = extractStage(file.getFileName().toString());
             Map<String, Object> props;
 
-            if (file.toString().endsWith(".yml") || file.toString().endsWith(".yaml")) {
+            if (YAML_MATCHER.matches(file.getFileName())) {
                 props = loadYaml(file);
             } else {
                 props = loadProperties(file);
             }
 
             Map<String, Object> flat = flatten(props);
-            // merge if stage already exists (multi-document or duplicate)
             result.merge(stage, new StageConfig(stage, flat),
                     (a, b) -> new StageConfig(stage, merged(a.properties(), b.properties())));
         }
@@ -47,18 +50,14 @@ public class ConfigLoader {
 
     private List<Path> collectFiles(Path dir) throws IOException {
         List<Path> files = new ArrayList<>();
-        try (Stream<Path> yaml = Files.find(dir, 1, (p, a) -> matchesGlob(p, YAML_GLOB));
-             Stream<Path> props = Files.find(dir, 1, (p, a) -> matchesGlob(p, PROPS_GLOB))) {
-            yaml.forEach(files::add);
-            props.forEach(files::add);
+        try (Stream<Path> all = Files.find(dir, 1, (p, a) -> {
+            Path name = p.getFileName();
+            return YAML_MATCHER.matches(name) || PROPS_MATCHER.matches(name);
+        })) {
+            all.forEach(files::add);
         }
         files.sort(Comparator.comparing(p -> p.getFileName().toString()));
         return files;
-    }
-
-    private boolean matchesGlob(Path path, String glob) {
-        PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + glob);
-        return matcher.matches(path.getFileName());
     }
 
     // application.yml → "default", application-prod.yml → "prod"
@@ -72,14 +71,17 @@ public class ConfigLoader {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> loadYaml(Path file) throws IOException {
-        Yaml yaml = new Yaml();
+        Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
+        Map<String, Object> merged = new LinkedHashMap<>();
         try (InputStream in = Files.newInputStream(file)) {
-            Object loaded = yaml.load(in);
-            if (loaded instanceof Map<?, ?> map) {
-                return (Map<String, Object>) map;
+            // loadAll handles multi-document YAML files (--- separator)
+            for (Object doc : yaml.loadAll(in)) {
+                if (doc instanceof Map<?, ?> map) {
+                    merged.putAll((Map<String, Object>) map);
+                }
             }
-            return Collections.emptyMap();
         }
+        return merged;
     }
 
     private Map<String, Object> loadProperties(Path file) throws IOException {

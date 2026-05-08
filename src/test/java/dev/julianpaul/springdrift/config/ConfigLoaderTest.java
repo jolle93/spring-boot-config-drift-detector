@@ -83,6 +83,47 @@ class ConfigLoaderTest {
     }
 
     @Test
+    void load_parsesYamlExtension(@TempDir Path dir) throws IOException {
+        Files.writeString(dir.resolve("application-staging.yaml"), """
+                server:
+                  port: 8081
+                """);
+
+        Map<String, StageConfig> result = loader.load(dir);
+
+        assertThat(result).containsKey("staging");
+        assertThat(result.get("staging").getValue("server.port")).isEqualTo(8081);
+    }
+
+    @Test
+    void load_multiDocumentYaml(@TempDir Path dir) throws IOException {
+        Files.writeString(dir.resolve("application.yml"), """
+                server:
+                  port: 8080
+                ---
+                spring:
+                  application:
+                    name: my-app
+                """);
+
+        Map<String, StageConfig> result = loader.load(dir);
+
+        assertThat(result).containsKey("default");
+        assertThat(result.get("default").getValue("server.port")).isEqualTo(8080);
+        assertThat(result.get("default").getValue("spring.application.name")).isEqualTo("my-app");
+    }
+
+    @Test
+    void load_rejectsMaliciousYamlTags(@TempDir Path dir) throws IOException {
+        // SafeConstructor must reject arbitrary Java class instantiation via !!-tags
+        Files.writeString(dir.resolve("application.yml"),
+                "evil: !!javax.script.ScriptEngineManager []\n");
+
+        assertThatThrownBy(() -> loader.load(dir))
+                .isInstanceOf(Exception.class);
+    }
+
+    @Test
     void load_throwsForNonDirectory() {
         assertThatThrownBy(() -> loader.load(Path.of("/nonexistent/path")))
                 .isInstanceOf(IOException.class)

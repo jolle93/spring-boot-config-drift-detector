@@ -20,6 +20,9 @@ public class ReportGenerator {
     public Path generate(List<DriftAnalyzer.DriftEntry> drifts, Map<String, StageConfig> stages, Path outputFile) throws IOException {
         Path target = outputFile != null ? outputFile : DEFAULT_OUTPUT;
         String content = buildReport(drifts, stages);
+        if (target.getParent() != null) {
+            Files.createDirectories(target.getParent());
+        }
         Files.writeString(target, content, StandardCharsets.UTF_8);
         return target;
     }

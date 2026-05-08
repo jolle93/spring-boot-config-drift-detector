@@ -29,9 +29,9 @@ public class DriftAnalyzer {
     ) {}
 
     public enum DriftType {
+        DANGEROUS_DEFAULT,
         MISSING_KEY,
-        VALUE_DRIFT,
-        DANGEROUS_DEFAULT
+        VALUE_DRIFT
     }
 
     public List<DriftEntry> analyze(Map<String, StageConfig> stages) {
