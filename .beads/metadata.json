@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "spring_boot_config_drift_detector",
+  "project_id": "8c6a6ca9-4c02-4b3f-bc44-bf6b0eee3045"
+}
