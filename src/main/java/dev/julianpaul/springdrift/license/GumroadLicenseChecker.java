@@ -12,7 +12,17 @@ import java.time.Duration;
 public class GumroadLicenseChecker {
 
     private static final String PRODUCT_PERMALINK = "spring-drift";
-    private static final String VERIFY_URL = "https://api.gumroad.com/v2/licenses/verify";
+    private static final String DEFAULT_VERIFY_URL = "https://api.gumroad.com/v2/licenses/verify";
+
+    private final String verifyUrl;
+
+    public GumroadLicenseChecker() {
+        this(DEFAULT_VERIFY_URL);
+    }
+
+    GumroadLicenseChecker(String verifyUrl) {
+        this.verifyUrl = verifyUrl;
+    }
 
     public record VerificationResult(boolean success, String message) {}
 
@@ -26,7 +36,7 @@ public class GumroadLicenseChecker {
                 + "&increment_uses_count=false";
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(VERIFY_URL))
+                .uri(URI.create(verifyUrl))
                 .timeout(Duration.ofSeconds(15))
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
