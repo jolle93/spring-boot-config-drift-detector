@@ -3,8 +3,11 @@ package dev.julianpaul.springdrift.license;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 
 public class LicenseStore {
 
@@ -16,6 +19,16 @@ public class LicenseStore {
     public void save(String licenseKey) throws IOException {
         Files.createDirectories(STORE_DIR);
         Files.writeString(KEY_FILE, licenseKey.strip());
+        restrictToOwner(KEY_FILE);
+    }
+
+    private void restrictToOwner(Path path) {
+        try {
+            Set<PosixFilePermission> ownerOnly = PosixFilePermissions.fromString("rw-------");
+            Files.setPosixFilePermissions(path, ownerOnly);
+        } catch (UnsupportedOperationException | IOException ignored) {
+            // Non-POSIX systems (Windows) — skip silently
+        }
     }
 
     public String load() throws IOException {

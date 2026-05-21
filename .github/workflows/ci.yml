@@ -55,6 +55,8 @@ jobs:
         run: mvn -B package -Pnative -DskipTests
 
       - name: Smoke-test binary
+        env:
+          SPRING_DRIFT_SKIP_LICENSE: "true"
         run: |
           ./target/spring-drift --version
           ./target/spring-drift --help

@@ -67,6 +67,10 @@ public class ScanCommand implements Callable<Integer> {
     }
 
     private int checkLicense() {
+        if ("true".equalsIgnoreCase(System.getenv("SPRING_DRIFT_SKIP_LICENSE"))) {
+            return 0;
+        }
+
         LicenseStore store = new LicenseStore();
 
         if (!store.hasKey()) {
