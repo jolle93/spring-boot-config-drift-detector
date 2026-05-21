@@ -7,7 +7,7 @@ import picocli.CommandLine.Command;
         description = "Detects configuration drift across Spring Boot stages",
         version = "1.0.0",
         mixinStandardHelpOptions = true,
-        subcommands = {ScanCommand.class}
+        subcommands = {ScanCommand.class, LicenseCommand.class}
 )
 public class SpringDriftCommand implements Runnable {
 
