@@ -3,6 +3,8 @@ package dev.julianpaul.springdrift.cli;
 import dev.julianpaul.springdrift.analyzer.DriftAnalyzer;
 import dev.julianpaul.springdrift.config.ConfigLoader;
 import dev.julianpaul.springdrift.config.StageConfig;
+import dev.julianpaul.springdrift.license.GumroadLicenseChecker;
+import dev.julianpaul.springdrift.license.LicenseStore;
 import dev.julianpaul.springdrift.report.ReportGenerator;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
@@ -32,6 +34,9 @@ public class ScanCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        int licenseCheck = checkLicense();
+        if (licenseCheck != 0) return licenseCheck;
+
         try {
             ConfigLoader loader = new ConfigLoader();
             Map<String, StageConfig> stages = loader.load(resourcesDir);
@@ -57,6 +62,47 @@ public class ScanCommand implements Callable<Integer> {
 
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
+            return 2;
+        }
+    }
+
+    private int checkLicense() {
+        if ("true".equalsIgnoreCase(System.getenv("SPRING_DRIFT_SKIP_LICENSE"))) {
+            return 0;
+        }
+
+        LicenseStore store = new LicenseStore();
+
+        if (!store.hasKey()) {
+            System.err.println("No license key found.");
+            System.err.println("Activate your license with: spring-drift license activate <KEY>");
+            System.err.println("Purchase at: https://jollepaul.gumroad.com/l/spring-drift");
+            return 1;
+        }
+
+        if (store.isVerifiedRecently()) {
+            return 0;
+        }
+
+        // Cache expired or missing — re-verify with Gumroad
+        try {
+            String key = store.load();
+            GumroadLicenseChecker.VerificationResult result = new GumroadLicenseChecker().verify(key);
+            if (result.success()) {
+                store.saveVerified();
+                return 0;
+            }
+            System.err.println("License invalid: " + result.message());
+            System.err.println("Re-activate with: spring-drift license activate <KEY>");
+            return 1;
+        } catch (IOException | InterruptedException e) {
+            // Fail open when offline: allow the scan if a key is present but unreachable
+            if (store.hasCachedVerification()) {
+                System.err.println("Warning: could not reach license server (" + e.getMessage() + "). Using cached verification.");
+                return 0;
+            }
+            System.err.println("Could not verify license: " + e.getMessage());
+            System.err.println("Please check your internet connection.");
             return 2;
         }
     }
